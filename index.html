@@ -78,6 +78,31 @@
             color: white;
         }
 
+        .age-btn {
+            padding: 12px 25px;
+            border: 3px solid #ff6b6b;
+            background: white;
+            color: #ff6b6b;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .age-btn:hover {
+            background: #ff6b6b;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .age-btn.active {
+            background: #ff6b6b;
+            color: white;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
         .mbti-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -277,6 +302,11 @@
             .modal-type {
                 font-size: 2.2em;
             }
+
+            .age-btn {
+                font-size: 0.95em;
+                padding: 10px 18px;
+            }
         }
     </style>
 </head>
@@ -288,6 +318,11 @@
         </header>
 
         <div class="filter-section">
+            <div class="filter-buttons" style="margin-bottom: 20px;">
+                <button class="age-btn active" data-age="elementary">🎒 초등학생용</button>
+                <button class="age-btn" data-age="thirties">💼 30대용</button>
+                <button class="age-btn" data-age="forties">👔 40대용</button>
+            </div>
             <div class="filter-buttons">
                 <button class="filter-btn active" data-filter="all">전체보기</button>
                 <button class="filter-btn" data-filter="analyst">분석가형 (NT)</button>
@@ -313,284 +348,837 @@
     </div>
 
     <script>
-        // MBTI 16가지 유형 데이터
-        const mbtiData = {
-            INTJ: {
-                type: 'INTJ',
-                nickname: '전략가',
-                category: 'analyst',
-                categoryName: '분석가형',
-                description: '상상력이 풍부하고 전략적인 사고를 가진 계획자입니다.',
-                traits: [
-                    '독립적이고 결단력이 있음',
-                    '논리적이고 분석적인 사고',
-                    '장기적인 비전과 목표 지향적',
-                    '높은 기준과 완벽주의 성향',
-                    '혁신적이고 창의적인 문제 해결'
-                ],
-                strengths: '전략적 사고, 독립성, 결단력, 창의성',
-                weaknesses: '지나친 비판적 성향, 감정 표현 어려움, 완벽주의',
-                careers: '과학자, 엔지니어, 전략 컨설턴트, 프로그래머'
+        // 현재 선택된 연령대와 필터
+        let currentAge = 'elementary';
+        let currentFilter = 'all';
+
+        // 연령대별 MBTI 데이터
+        const mbtiDataByAge = {
+            elementary: {
+                INTJ: {
+                    type: 'INTJ',
+                    nickname: '전략가',
+                    category: 'analyst',
+                    categoryName: '분석가형',
+                    description: '똑똑하고 계획을 잘 세우는 친구예요. 미래를 상상하는 것을 좋아해요!',
+                    traits: [
+                        '혼자 공부하는 것을 좋아해요',
+                        '퍼즐이나 문제 푸는 것을 잘해요',
+                        '미래에 뭘 할지 계획 세우기를 좋아해요',
+                        '완벽하게 하려고 노력해요',
+                        '새로운 방법으로 문제를 풀어요'
+                    ],
+                    strengths: '계획 잘 세우기, 혼자서도 잘함, 똑똑한 생각, 창의력',
+                    weaknesses: '친구들한테 너무 엄격함, 감정 표현 어려움',
+                    careers: '과학자, 발명가, 프로그래머, 의사'
+                },
+                INTP: {
+                    type: 'INTP',
+                    nickname: '논리술사',
+                    category: 'analyst',
+                    categoryName: '분석가형',
+                    description: '궁금한 게 많고 새로운 것을 배우는 걸 좋아하는 친구예요!',
+                    traits: [
+                        '왜 그런지 이유를 알고 싶어해요',
+                        '새로운 것 배우는 걸 좋아해요',
+                        '창의적인 아이디어가 많아요',
+                        '공평하게 판단해요',
+                        '어려운 것도 이해하려고 노력해요'
+                    ],
+                    strengths: '분석 잘함, 창의력, 공정함, 문제 해결',
+                    weaknesses: '실행하기 어려움, 결정 못 내림, 친구 사귀기 어려움',
+                    careers: '과학자, 프로그래머, 수학자, 연구원'
+                },
+                ENTJ: {
+                    type: 'ENTJ',
+                    nickname: '통솔자',
+                    category: 'analyst',
+                    categoryName: '분석가형',
+                    description: '리더가 되어 친구들을 이끄는 것을 좋아하는 친구예요!',
+                    traits: [
+                        '반장이나 모둠장을 잘해요',
+                        '목표를 정하고 이루려고 노력해요',
+                        '빨리빨리 하는 것을 좋아해요',
+                        '계획을 세우는 것을 좋아해요',
+                        '자신감이 넘쳐요'
+                    ],
+                    strengths: '리더십, 계획 세우기, 빨리 결정하기, 자신감',
+                    weaknesses: '고집이 세요, 친구 감정 잘 못 봐요, 너무 직설적',
+                    careers: '회사 사장, 변호사, 정치인, 선생님'
+                },
+                ENTP: {
+                    type: 'ENTP',
+                    nickname: '변론가',
+                    category: 'analyst',
+                    categoryName: '분석가형',
+                    description: '토론하고 새로운 아이디어 내는 것을 좋아하는 똑똑한 친구예요!',
+                    traits: [
+                        '말을 재미있게 잘해요',
+                        '생각이 빨라요',
+                        '새로운 아이디어가 많아요',
+                        '궁금한 게 많아요',
+                        '새로운 것 시도하는 걸 좋아해요'
+                    ],
+                    strengths: '창의력, 말 잘함, 적응 잘함, 소통 능력',
+                    weaknesses: '집중 안됨, 반복되는 것 싫어함, 논쟁 좋아함',
+                    careers: '사업가, 발명가, 마케터, 유튜버'
+                },
+                INFJ: {
+                    type: 'INFJ',
+                    nickname: '옹호자',
+                    category: 'diplomat',
+                    categoryName: '외교관형',
+                    description: '친구들을 도와주고 이해해주는 착한 친구예요!',
+                    traits: [
+                        '친구 마음을 잘 알아채요',
+                        '좋은 일을 하고 싶어해요',
+                        '상상력이 풍부해요',
+                        '예술적인 재능이 있어요',
+                        '옳은 일을 하려고 노력해요'
+                    ],
+                    strengths: '친구 이해하기, 창의력, 착함, 헌신',
+                    weaknesses: '완벽하려고 해서 힘들어함, 너무 이상적',
+                    careers: '상담 선생님, 작가, 심리학자, 복지사'
+                },
+                INFP: {
+                    type: 'INFP',
+                    nickname: '중재자',
+                    category: 'diplomat',
+                    categoryName: '외교관형',
+                    description: '상상력이 풍부하고 친구들에게 친절한 마음 따뜻한 친구예요!',
+                    traits: [
+                        '꿈이 많고 상상을 잘해요',
+                        '친구 감정을 잘 이해해요',
+                        '그림이나 글쓰기를 좋아해요',
+                        '자기만의 생각이 중요해요',
+                        '친구를 도와주는 걸 좋아해요'
+                    ],
+                    strengths: '친구 이해하기, 창의력, 성실함, 마음이 넓음',
+                    weaknesses: '너무 이상적, 싸우는 거 싫어함, 현실적이지 않음',
+                    careers: '작가, 예술가, 상담 선생님, 선생님'
+                },
+                ENFJ: {
+                    type: 'ENFJ',
+                    nickname: '선도자',
+                    category: 'diplomat',
+                    categoryName: '외교관형',
+                    description: '친구들에게 힘을 주고 이끄는 인기 많은 친구예요!',
+                    traits: [
+                        '친구들에게 좋은 영향을 줘요',
+                        '말을 잘해요',
+                        '친구 마음을 잘 이해해요',
+                        '모둠 활동을 잘 이끌어요',
+                        '친구들이 잘 되게 도와줘요'
+                    ],
+                    strengths: '리더십, 말 잘함, 친구 이해하기, 인기',
+                    weaknesses: '남 도와주느라 힘들어함, 비판받으면 상처받음',
+                    careers: '선생님, 코치, 상담가, 방송인'
+                },
+                ENFP: {
+                    type: 'ENFP',
+                    nickname: '활동가',
+                    category: 'diplomat',
+                    categoryName: '외교관형',
+                    description: '활발하고 재미있는 일을 좋아하는 에너지 넘치는 친구예요!',
+                    traits: [
+                        '에너지가 넘쳐요',
+                        '상상력이 풍부해요',
+                        '친구 사귀기를 좋아해요',
+                        '새로운 것에 도전해요',
+                        '자유롭게 놀기를 좋아해요'
+                    ],
+                    strengths: '열정, 창의력, 친구 많음, 긍정적',
+                    weaknesses: '집중 안됨, 계획 안 세움, 너무 낙관적',
+                    careers: '배우, 작가, 기획자, 선생님'
+                },
+                ISTJ: {
+                    type: 'ISTJ',
+                    nickname: '현실주의자',
+                    category: 'sentinel',
+                    categoryName: '관리자형',
+                    description: '약속을 잘 지키고 정리정돈을 잘하는 책임감 있는 친구예요!',
+                    traits: [
+                        '숙제를 꼭 해가요',
+                        '정리정돈을 잘해요',
+                        '규칙을 잘 지켜요',
+                        '현실적으로 생각해요',
+                        '꼼꼼하고 철저해요'
+                    ],
+                    strengths: '책임감, 믿을 수 있음, 정리 잘함, 꼼꼼함',
+                    weaknesses: '융통성 없음, 변화 싫어함, 감정 표현 어려움',
+                    careers: '회계사, 공무원, 관리자, 군인'
+                },
+                ISFJ: {
+                    type: 'ISFJ',
+                    nickname: '수호자',
+                    category: 'sentinel',
+                    categoryName: '관리자형',
+                    description: '친구들을 돌봐주고 도와주는 따뜻한 마음을 가진 친구예요!',
+                    traits: [
+                        '친구를 잘 도와줘요',
+                        '책임감이 강해요',
+                        '세심하고 배려심이 많아요',
+                        '안정적인 것을 좋아해요',
+                        '실용적이고 체계적이에요'
+                    ],
+                    strengths: '헌신적, 배려심, 실용적, 책임감',
+                    weaknesses: '자기주장 약함, 변화 싫어함, 너무 희생함',
+                    careers: '간호사, 선생님, 사서, 행정 직원'
+                },
+                ESTJ: {
+                    type: 'ESTJ',
+                    nickname: '경영자',
+                    category: 'sentinel',
+                    categoryName: '관리자형',
+                    description: '모둠 활동을 잘 정리하고 이끄는 반장 같은 친구예요!',
+                    traits: [
+                        '정리정돈을 잘해요',
+                        '현실적으로 생각해요',
+                        '빨리 결정해요',
+                        '규칙을 지켜요',
+                        '책임감 있고 믿을 수 있어요'
+                    ],
+                    strengths: '리더십, 정리 잘함, 빨리 결정, 책임감',
+                    weaknesses: '융통성 없음, 고집 셈, 친구 감정 잘 못 봄',
+                    careers: '반장, 관리자, 경찰, 판사'
+                },
+                ESFJ: {
+                    type: 'ESFJ',
+                    nickname: '집정관',
+                    category: 'sentinel',
+                    categoryName: '관리자형',
+                    description: '친구가 많고 사람들을 잘 돌봐주는 인기 많은 친구예요!',
+                    traits: [
+                        '친구 사귀기를 좋아해요',
+                        '친구를 도와주는 걸 좋아해요',
+                        '친구들과 사이좋게 지내요',
+                        '책임감 있고 믿을 수 있어요',
+                        '실용적이고 체계적이에요'
+                    ],
+                    strengths: '협력, 배려심, 친구 많음, 책임감',
+                    weaknesses: '비판받으면 상처받음, 변화 싫어함',
+                    careers: '간호사, 이벤트 기획자, 선생님, 상담원'
+                },
+                ISTP: {
+                    type: 'ISTP',
+                    nickname: '장인',
+                    category: 'explorer',
+                    categoryName: '탐험가형',
+                    description: '손재주가 좋고 만들기를 잘하는 실용적인 친구예요!',
+                    traits: [
+                        '손으로 만드는 걸 좋아해요',
+                        '실용적으로 생각해요',
+                        '문제를 잘 풀어요',
+                        '적응을 잘해요',
+                        '혼자 있는 것도 좋아해요'
+                    ],
+                    strengths: '문제 해결, 실용적, 적응 잘함, 침착함',
+                    weaknesses: '감정 표현 어려움, 계획 안 세움',
+                    careers: '엔지니어, 정비사, 운동선수, 건축가'
+                },
+                ISFP: {
+                    type: 'ISFP',
+                    nickname: '모험가',
+                    category: 'explorer',
+                    categoryName: '탐험가형',
+                    description: '예술적 재능이 있고 자유로운 영혼을 가진 친구예요!',
+                    traits: [
+                        '그림 그리기를 좋아해요',
+                        '자유롭게 행동해요',
+                        '평화롭고 온화해요',
+                        '지금 이 순간을 즐겨요',
+                        '자기만의 생각이 중요해요'
+                    ],
+                    strengths: '창의력, 감수성, 유연함, 평화로움',
+                    weaknesses: '계획 안 세움, 싸우는 거 싫어함, 자기주장 약함',
+                    careers: '예술가, 디자이너, 음악가, 사진작가'
+                },
+                ESTP: {
+                    type: 'ESTP',
+                    nickname: '사업가',
+                    category: 'explorer',
+                    categoryName: '탐험가형',
+                    description: '활발하고 모험을 좋아하는 에너지 넘치는 친구예요!',
+                    traits: [
+                        '에너지가 넘쳐요',
+                        '행동이 빨라요',
+                        '순발력이 좋아요',
+                        '새로운 경험을 좋아해요',
+                        '친구 사귀기를 좋아해요'
+                    ],
+                    strengths: '행동력, 적응 잘함, 친구 많음, 대담함',
+                    weaknesses: '충동적, 계획 안 세움, 무모해 보임',
+                    careers: '사업가, 영업, 소방관, 운동선수'
+                },
+                ESFP: {
+                    type: 'ESFP',
+                    nickname: '연예인',
+                    category: 'explorer',
+                    categoryName: '탐험가형',
+                    description: '밝고 재미있어서 친구들을 즐겁게 해주는 친구예요!',
+                    traits: [
+                        '친구 사귀기를 좋아해요',
+                        '즉흥적으로 행동해요',
+                        '밝고 긍정적이에요',
+                        '지금을 즐겨요',
+                        '친구들을 웃겨요'
+                    ],
+                    strengths: '친구 많음, 열정, 긍정적, 실용적',
+                    weaknesses: '계획 안 세움, 집중 안됨, 비판받으면 상처받음',
+                    careers: '배우, 이벤트 기획자, 판매원, 여행 가이드'
+                }
             },
-            INTP: {
-                type: 'INTP',
-                nickname: '논리술사',
-                category: 'analyst',
-                categoryName: '분석가형',
-                description: '지식을 갈망하는 혁신적인 발명가입니다.',
-                traits: [
-                    '논리적이고 분석적인 성향',
-                    '지적 호기심이 매우 강함',
-                    '독창적이고 창의적인 아이디어',
-                    '객관적이고 공정한 판단',
-                    '이론과 개념에 대한 깊은 이해'
-                ],
-                strengths: '분석력, 창의성, 객관성, 문제 해결 능력',
-                weaknesses: '실용성 부족, 우유부단함, 사회성 부족',
-                careers: '연구원, 프로그래머, 수학자, 철학자'
+            thirties: {
+                INTJ: {
+                    type: 'INTJ',
+                    nickname: '전략가',
+                    category: 'analyst',
+                    categoryName: '분석가형',
+                    description: '장기적 비전을 가지고 커리어를 체계적으로 설계하는 전문가입니다.',
+                    traits: [
+                        '업무 효율성과 최적화에 집중',
+                        '데이터 기반의 의사결정',
+                        '5년, 10년 후 커리어 플랜 수립',
+                        '전문성 향상에 투자',
+                        '독립적인 업무 수행 선호'
+                    ],
+                    strengths: '전략적 사고, 전문성, 문제 해결, 자기 개발',
+                    weaknesses: '네트워킹 부족, 감정적 소통 어려움, 완벽주의로 인한 스트레스',
+                    careers: '데이터 분석가, 시스템 아키텍트, 전략 기획자, CTO'
+                },
+                INTP: {
+                    type: 'INTP',
+                    nickname: '논리술사',
+                    category: 'analyst',
+                    categoryName: '분석가형',
+                    description: '혁신적인 아이디어로 업계의 패러다임을 바꾸는 전문가입니다.',
+                    traits: [
+                        '복잡한 기술 문제 해결 능력',
+                        '새로운 기술 트렌드에 민감',
+                        '논리적 분석과 연구 선호',
+                        '독창적인 솔루션 제시',
+                        '지속적인 학습과 성장'
+                    ],
+                    strengths: '분석력, 혁신, 기술 전문성, 객관성',
+                    weaknesses: '실행력 부족, 업무 우선순위 관리 어려움, 팀워크 스킬',
+                    careers: '연구원, 소프트웨어 아키텍트, 데이터 사이언티스트, 학자'
+                },
+                ENTJ: {
+                    type: 'ENTJ',
+                    nickname: '통솔자',
+                    category: 'analyst',
+                    categoryName: '분석가형',
+                    description: '조직을 이끌고 비즈니스 성과를 만들어내는 리더입니다.',
+                    traits: [
+                        '팀과 프로젝트를 효율적으로 관리',
+                        '명확한 비즈니스 목표 설정',
+                        '빠른 의사결정과 실행력',
+                        '조직 성장과 변화 주도',
+                        '결과 중심의 업무 스타일'
+                    ],
+                    strengths: '리더십, 전략 실행, 목표 달성, 조직 관리',
+                    weaknesses: '워라밸 부족, 감정적 배려 부족, 지나친 성과 압박',
+                    careers: '팀장/임원, 컨설턴트, 사업가, 프로젝트 매니저'
+                },
+                ENTP: {
+                    type: 'ENTP',
+                    nickname: '변론가',
+                    category: 'analyst',
+                    categoryName: '분석가형',
+                    description: '창의적인 아이디어로 새로운 비즈니스 기회를 만드는 혁신가입니다.',
+                    traits: [
+                        '새로운 비즈니스 모델 탐색',
+                        '창의적인 문제 해결',
+                        '빠른 트렌드 파악과 적응',
+                        '도전적인 프로젝트 선호',
+                        '다양한 네트워킹'
+                    ],
+                    strengths: '창의성, 적응력, 커뮤니케이션, 기회 포착',
+                    weaknesses: '프로젝트 완성도, 루틴 업무 회피, 집중력 부족',
+                    careers: '스타트업 창업자, 마케팅 전략가, 컨설턴트, 비즈니스 개발'
+                },
+                INFJ: {
+                    type: 'INFJ',
+                    nickname: '옹호자',
+                    category: 'diplomat',
+                    categoryName: '외교관형',
+                    description: '조직의 비전과 가치를 실현하며 사람들에게 영감을 주는 전문가입니다.',
+                    traits: [
+                        '의미 있는 일에서 보람 추구',
+                        '팀원의 성장과 발전 지원',
+                        '장기적 비전과 가치 중시',
+                        '깊이 있는 업무 관계 형성',
+                        '조직 문화 개선에 관심'
+                    ],
+                    strengths: '통찰력, 공감 능력, 헌신, 비전 제시',
+                    weaknesses: '번아웃 위험, 이상과 현실의 괴리, 자기희생',
+                    careers: 'HR 매니저, 조직 개발 전문가, 코치, 상담가'
+                },
+                INFP: {
+                    type: 'INFP',
+                    nickname: '중재자',
+                    category: 'diplomat',
+                    categoryName: '외교관형',
+                    description: '자신의 가치관과 일치하는 의미 있는 커리어를 추구하는 전문가입니다.',
+                    traits: [
+                        '가치 중심의 커리어 선택',
+                        '창의적인 프로젝트 선호',
+                        '진정성 있는 업무 관계',
+                        '개인의 성장과 자아실현',
+                        '유연한 업무 환경 선호'
+                    ],
+                    strengths: '창의성, 진정성, 공감 능력, 적응력',
+                    weaknesses: '현실적 제약 대응, 갈등 상황 회피, 자기 PR 부족',
+                    careers: '콘텐츠 크리에이터, UX 디자이너, 카피라이터, 작가'
+                },
+                ENFJ: {
+                    type: 'ENFJ',
+                    nickname: '선도자',
+                    category: 'diplomat',
+                    categoryName: '외교관형',
+                    description: '팀을 하나로 모으고 조직의 긍정적 변화를 이끄는 리더입니다.',
+                    traits: [
+                        '팀 빌딩과 조직 문화 형성',
+                        '뛰어난 커뮤니케이션 능력',
+                        '팀원의 동기부여와 코칭',
+                        '협업을 통한 시너지 창출',
+                        '사람 중심의 리더십'
+                    ],
+                    strengths: '리더십, 소통 능력, 공감 능력, 영향력',
+                    weaknesses: '자기 관리 부족, 비판에 민감, 경계 설정 어려움',
+                    careers: '팀장, 교육 매니저, 기업 강사, HR 리더'
+                },
+                ENFP: {
+                    type: 'ENFP',
+                    nickname: '활동가',
+                    category: 'diplomat',
+                    categoryName: '외교관형',
+                    description: '열정과 창의성으로 새로운 기회를 만들어가는 혁신가입니다.',
+                    traits: [
+                        '다양한 프로젝트에 참여',
+                        '창의적인 아이디어 제시',
+                        '넓은 인맥과 네트워킹',
+                        '변화와 새로운 도전 추구',
+                        '긍정적인 팀 분위기 조성'
+                    ],
+                    strengths: '열정, 창의성, 네트워킹, 적응력',
+                    weaknesses: '집중력 관리, 장기 계획 부족, 과도한 멀티태스킹',
+                    careers: '마케터, 브랜드 매니저, 이벤트 기획자, 콘텐츠 디렉터'
+                },
+                ISTJ: {
+                    type: 'ISTJ',
+                    nickname: '현실주의자',
+                    category: 'sentinel',
+                    categoryName: '관리자형',
+                    description: '체계적이고 신뢰할 수 있는 업무 수행으로 조직의 안정성을 만드는 전문가입니다.',
+                    traits: [
+                        '정확하고 꼼꼼한 업무 처리',
+                        '프로세스와 규정 준수',
+                        '안정적이고 예측 가능한 성과',
+                        '책임감 있는 업무 태도',
+                        '데이터와 사실 기반 의사결정'
+                    ],
+                    strengths: '신뢰성, 정확성, 체계성, 책임감',
+                    weaknesses: '변화 적응, 유연성 부족, 혁신 시도 어려움',
+                    careers: '회계사, 재무 분석가, 품질 관리자, 감사'
+                },
+                ISFJ: {
+                    type: 'ISFJ',
+                    nickname: '수호자',
+                    category: 'sentinel',
+                    categoryName: '관리자형',
+                    description: '헌신적으로 조직과 팀을 지원하며 안정적인 환경을 만드는 전문가입니다.',
+                    traits: [
+                        '팀과 조직에 대한 헌신',
+                        '세심한 배려와 지원',
+                        '안정적인 업무 환경 선호',
+                        '실용적이고 체계적인 접근',
+                        '조화로운 팀 관계 유지'
+                    ],
+                    strengths: '헌신, 배려심, 실용성, 책임감',
+                    weaknesses: '자기 주장 부족, 변화 거부, 과도한 희생',
+                    careers: '행정 관리자, 고객 지원 매니저, 의료 관리자, 교육 행정'
+                },
+                ESTJ: {
+                    type: 'ESTJ',
+                    nickname: '경영자',
+                    category: 'sentinel',
+                    categoryName: '관리자형',
+                    description: '효율적인 관리와 실행으로 조직의 성과를 이끄는 관리자입니다.',
+                    traits: [
+                        '명확한 목표와 성과 관리',
+                        '효율적인 프로세스 구축',
+                        '빠른 의사결정과 실행',
+                        '규칙과 원칙 중시',
+                        '실질적인 결과 창출'
+                    ],
+                    strengths: '관리 능력, 실행력, 조직력, 결단력',
+                    weaknesses: '융통성 부족, 감정적 배려 부족, 권위적',
+                    careers: '운영 관리자, 생산 관리자, 프로젝트 매니저, 총무'
+                },
+                ESFJ: {
+                    type: 'ESFJ',
+                    nickname: '집정관',
+                    category: 'sentinel',
+                    categoryName: '관리자형',
+                    description: '팀의 화합과 협력을 이끌어내며 긍정적인 조직 문화를 만드는 전문가입니다.',
+                    traits: [
+                        '팀원 간 협력과 소통 촉진',
+                        '긍정적인 팀 분위기 조성',
+                        '실용적이고 체계적인 업무',
+                        '고객과 팀원 만족 중시',
+                        '책임감 있는 업무 수행'
+                    ],
+                    strengths: '협력, 소통 능력, 배려심, 실행력',
+                    weaknesses: '비판에 민감, 변화 거부, 타인 의견에 좌우됨',
+                    careers: '고객 관계 관리자, 이벤트 매니저, HR 담당자, 영업 관리자'
+                },
+                ISTP: {
+                    type: 'ISTP',
+                    nickname: '장인',
+                    category: 'explorer',
+                    categoryName: '탐험가형',
+                    description: '기술적 전문성과 문제 해결 능력으로 실질적인 성과를 만드는 전문가입니다.',
+                    traits: [
+                        '기술적 문제 해결 능력',
+                        '실용적이고 효율적인 접근',
+                        '독립적인 업무 수행',
+                        '위기 상황 대처 능력',
+                        '유연한 업무 스타일'
+                    ],
+                    strengths: '문제 해결, 기술력, 적응력, 실용성',
+                    weaknesses: '장기 계획 부족, 팀워크 어려움, 커뮤니케이션 부족',
+                    careers: '엔지니어, IT 전문가, 기술 컨설턴트, 정비 전문가'
+                },
+                ISFP: {
+                    type: 'ISFP',
+                    nickname: '모험가',
+                    category: 'explorer',
+                    categoryName: '탐험가형',
+                    description: '창의적 감각과 유연성으로 독특한 가치를 만들어내는 전문가입니다.',
+                    traits: [
+                        '예술적·미적 감각 활용',
+                        '유연하고 자유로운 업무 스타일',
+                        '현재 중심의 실행력',
+                        '개인의 가치관 중시',
+                        '조용하지만 효과적인 기여'
+                    ],
+                    strengths: '창의성, 감수성, 유연성, 실행력',
+                    weaknesses: '장기 계획 부족, 갈등 회피, 자기 홍보 부족',
+                    careers: '디자이너, 사진작가, 크리에이티브 디렉터, 공예가'
+                },
+                ESTP: {
+                    type: 'ESTP',
+                    nickname: '사업가',
+                    category: 'explorer',
+                    categoryName: '탐험가형',
+                    description: '빠른 실행력과 순발력으로 비즈니스 기회를 포착하는 행동가입니다.',
+                    traits: [
+                        '빠른 의사결정과 실행',
+                        '위기 상황에서 빛나는 순발력',
+                        '현실적이고 실용적인 접근',
+                        '네트워킹과 관계 구축',
+                        '도전적인 목표 추구'
+                    ],
+                    strengths: '행동력, 순발력, 협상력, 현실 감각',
+                    weaknesses: '장기 전략 부족, 충동적 결정, 디테일 관리',
+                    careers: '영업 관리자, 사업 개발, 트레이더, 현장 관리자'
+                },
+                ESFP: {
+                    type: 'ESFP',
+                    nickname: '연예인',
+                    category: 'explorer',
+                    categoryName: '탐험가형',
+                    description: '긍정적인 에너지와 실행력으로 팀에 활력을 주는 활동가입니다.',
+                    traits: [
+                        '밝고 긍정적인 팀 분위기',
+                        '즉각적인 실행과 대응',
+                        '사람 중심의 업무 스타일',
+                        '현장 중심의 경험 중시',
+                        '유연하고 적응력 높음'
+                    ],
+                    strengths: '사교성, 열정, 실행력, 긍정성',
+                    weaknesses: '계획성 부족, 장기 목표 관리, 비판에 민감',
+                    careers: '이벤트 매니저, 영업 전문가, 홍보 담당자, 고객 서비스 리더'
+                }
             },
-            ENTJ: {
-                type: 'ENTJ',
-                nickname: '통솔자',
-                category: 'analyst',
-                categoryName: '분석가형',
-                description: '대담하고 상상력이 풍부한 강력한 리더입니다.',
-                traits: [
-                    '타고난 리더십과 카리스마',
-                    '목표 지향적이고 야심찬 성격',
-                    '효율성과 생산성 중시',
-                    '전략적 사고와 장기 계획',
-                    '결단력 있고 자신감 넘침'
-                ],
-                strengths: '리더십, 전략적 사고, 효율성, 결단력',
-                weaknesses: '고집이 셈, 감정 무시, 지나치게 직설적',
-                careers: 'CEO, 변호사, 경영 컨설턴트, 정치인'
-            },
-            ENTP: {
-                type: 'ENTP',
-                nickname: '변론가',
-                category: 'analyst',
-                categoryName: '분석가형',
-                description: '지적 도전을 즐기는 영리하고 호기심 많은 사색가입니다.',
-                traits: [
-                    '논쟁과 토론을 즐김',
-                    '빠른 사고와 기지',
-                    '혁신적이고 창의적',
-                    '지적 호기심이 왕성함',
-                    '변화와 도전을 추구'
-                ],
-                strengths: '창의성, 논리력, 적응력, 의사소통 능력',
-                weaknesses: '집중력 부족, 루틴 싫어함, 논쟁적 성향',
-                careers: '기업가, 변호사, 발명가, 마케팅 전문가'
-            },
-            INFJ: {
-                type: 'INFJ',
-                nickname: '옹호자',
-                category: 'diplomat',
-                categoryName: '외교관형',
-                description: '이상주의적이고 원칙주의적인 선의의 지도자입니다.',
-                traits: [
-                    '깊은 통찰력과 직관',
-                    '이상주의적 가치관',
-                    '타인에 대한 깊은 공감',
-                    '창의적이고 예술적 감각',
-                    '강한 신념과 원칙'
-                ],
-                strengths: '통찰력, 공감 능력, 창의성, 헌신',
-                weaknesses: '완벽주의, 지나친 이상주의, 번아웃 위험',
-                careers: '상담가, 작가, 심리학자, 사회운동가'
-            },
-            INFP: {
-                type: 'INFP',
-                nickname: '중재자',
-                category: 'diplomat',
-                categoryName: '외교관형',
-                description: '항상 선을 행할 준비가 되어 있는 부드럽고 친절한 이타주의자입니다.',
-                traits: [
-                    '이상주의적이고 낭만적',
-                    '깊은 감수성과 공감 능력',
-                    '창의적이고 상상력이 풍부',
-                    '개인의 가치와 신념 중시',
-                    '타인을 돕고자 하는 마음'
-                ],
-                strengths: '공감력, 창의성, 성실함, 개방성',
-                weaknesses: '지나치게 이상적, 갈등 회피, 실용성 부족',
-                careers: '작가, 예술가, 상담가, 교육자'
-            },
-            ENFJ: {
-                type: 'ENFJ',
-                nickname: '선도자',
-                category: 'diplomat',
-                categoryName: '외교관형',
-                description: '카리스마 넘치고 영감을 주는 타고난 리더입니다.',
-                traits: [
-                    '타인에게 영감을 주는 능력',
-                    '뛰어난 의사소통 능력',
-                    '공감과 이해심이 깊음',
-                    '조직과 팀을 이끄는 리더십',
-                    '타인의 성장을 돕는 것에서 보람을 느낌'
-                ],
-                strengths: '리더십, 소통 능력, 공감력, 카리스마',
-                weaknesses: '지나친 이타심, 비판에 민감, 자기희생',
-                careers: '교사, 코치, 정치인, HR 전문가'
-            },
-            ENFP: {
-                type: 'ENFP',
-                nickname: '활동가',
-                category: 'diplomat',
-                categoryName: '외교관형',
-                description: '열정적이고 창의적이며 긍정적인 자유로운 영혼입니다.',
-                traits: [
-                    '열정적이고 에너지 넘침',
-                    '창의적이고 상상력이 풍부',
-                    '사교적이고 친화력이 좋음',
-                    '새로운 가능성을 추구',
-                    '자유로운 영혼과 모험심'
-                ],
-                strengths: '열정, 창의성, 소통 능력, 긍정성',
-                weaknesses: '집중력 부족, 계획성 부족, 과도한 낙관주의',
-                careers: '배우, 작가, 기획자, 상담가'
-            },
-            ISTJ: {
-                type: 'ISTJ',
-                nickname: '현실주의자',
-                category: 'sentinel',
-                categoryName: '관리자형',
-                description: '사실을 중시하고 신뢰할 수 있는 실용적인 관리자입니다.',
-                traits: [
-                    '책임감이 강하고 신뢰할 수 있음',
-                    '체계적이고 조직적',
-                    '전통과 규칙을 존중',
-                    '현실적이고 실용적',
-                    '꼼꼼하고 철저함'
-                ],
-                strengths: '책임감, 신뢰성, 조직력, 꼼꼼함',
-                weaknesses: '융통성 부족, 변화 거부, 감정 표현 어려움',
-                careers: '회계사, 공무원, 관리자, 군인'
-            },
-            ISFJ: {
-                type: 'ISFJ',
-                nickname: '수호자',
-                category: 'sentinel',
-                categoryName: '관리자형',
-                description: '헌신적이고 따뜻한 수호자입니다.',
-                traits: [
-                    '헌신적이고 책임감 강함',
-                    '타인을 돌보고 지원함',
-                    '세심하고 배려심 깊음',
-                    '전통과 안정을 중시',
-                    '실용적이고 체계적'
-                ],
-                strengths: '헌신, 배려심, 실용성, 책임감',
-                weaknesses: '자기주장 약함, 변화 거부, 과도한 희생',
-                careers: '간호사, 교사, 사서, 행정직'
-            },
-            ESTJ: {
-                type: 'ESTJ',
-                nickname: '경영자',
-                category: 'sentinel',
-                categoryName: '관리자형',
-                description: '뛰어난 관리 능력으로 사람과 일을 관리하는 대표적인 관리자입니다.',
-                traits: [
-                    '조직과 관리에 뛰어남',
-                    '현실적이고 실용적',
-                    '결단력 있고 효율적',
-                    '규칙과 전통을 존중',
-                    '책임감 있고 신뢰할 수 있음'
-                ],
-                strengths: '리더십, 조직력, 결단력, 책임감',
-                weaknesses: '융통성 부족, 고집이 셈, 감정 무시',
-                careers: '관리자, 경영자, 경찰관, 판사'
-            },
-            ESFJ: {
-                type: 'ESFJ',
-                nickname: '집정관',
-                category: 'sentinel',
-                categoryName: '관리자형',
-                description: '배려심 많고 사교적이며 인기가 많은 협력자입니다.',
-                traits: [
-                    '사교적이고 친화력이 좋음',
-                    '타인을 돕고 돌보는 것을 좋아함',
-                    '조화와 협력을 중시',
-                    '책임감 있고 신뢰할 수 있음',
-                    '실용적이고 체계적'
-                ],
-                strengths: '협력, 배려심, 사교성, 책임감',
-                weaknesses: '비판에 민감, 변화 거부, 타인 의견에 좌우됨',
-                careers: '간호사, 이벤트 기획자, 교사, 고객 서비스'
-            },
-            ISTP: {
-                type: 'ISTP',
-                nickname: '장인',
-                category: 'explorer',
-                categoryName: '탐험가형',
-                description: '대담하고 실용적이며 모든 도구를 자유자재로 다루는 장인입니다.',
-                traits: [
-                    '손재주가 뛰어남',
-                    '실용적이고 현실적',
-                    '문제 해결 능력이 우수',
-                    '융통성 있고 적응력 좋음',
-                    '독립적이고 자유로움'
-                ],
-                strengths: '문제 해결, 실용성, 적응력, 침착함',
-                weaknesses: '감정 표현 어려움, 장기 계획 부족, 무책임해 보일 수 있음',
-                careers: '엔지니어, 정비사, 운동선수, 건축가'
-            },
-            ISFP: {
-                type: 'ISFP',
-                nickname: '모험가',
-                category: 'explorer',
-                categoryName: '탐험가형',
-                description: '유연하고 매력적인 예술가입니다.',
-                traits: [
-                    '예술적 감각과 심미안',
-                    '자유로운 영혼',
-                    '평화롭고 온화함',
-                    '현재를 즐기고 경험 중시',
-                    '개인의 가치관을 중요하게 여김'
-                ],
-                strengths: '창의성, 감수성, 유연성, 평화로움',
-                weaknesses: '계획성 부족, 갈등 회피, 자기주장 약함',
-                careers: '예술가, 디자이너, 음악가, 사진작가'
-            },
-            ESTP: {
-                type: 'ESTP',
-                nickname: '사업가',
-                category: 'explorer',
-                categoryName: '탐험가형',
-                description: '위험을 기꺼이 감수하는 스마트하고 에너지 넘치는 활동가입니다.',
-                traits: [
-                    '에너지 넘치고 행동적',
-                    '현실적이고 실용적',
-                    '순발력과 임기응변이 뛰어남',
-                    '모험과 새로운 경험을 추구',
-                    '사교적이고 매력적'
-                ],
-                strengths: '행동력, 적응력, 사교성, 대담함',
-                weaknesses: '충동적, 장기 계획 부족, 무모해 보일 수 있음',
-                careers: '기업가, 세일즈, 구조대원, 트레이더'
-            },
-            ESFP: {
-                type: 'ESFP',
-                nickname: '연예인',
-                category: 'explorer',
-                categoryName: '탐험가형',
-                description: '즉흥적이고 열정적이며 삶을 즐기는 자유로운 영혼입니다.',
-                traits: [
-                    '사교적이고 활발함',
-                    '즉흥적이고 자발적',
-                    '긍정적이고 낙천적',
-                    '현재를 즐기고 경험 중시',
-                    '타인을 즐겁게 하는 능력'
-                ],
-                strengths: '사교성, 열정, 긍정성, 실용성',
-                weaknesses: '계획성 부족, 집중력 부족, 비판에 민감',
-                careers: '배우, 이벤트 기획자, 판매원, 여행 가이드'
+            forties: {
+                INTJ: {
+                    type: 'INTJ',
+                    nickname: '전략가',
+                    category: 'analyst',
+                    categoryName: '분석가형',
+                    description: '풍부한 경험을 바탕으로 조직의 장기 전략을 설계하는 전략적 리더입니다.',
+                    traits: [
+                        '조직의 장기 비전과 전략 수립',
+                        '후배 전문가 육성과 멘토링',
+                        '경험 기반의 통찰력 있는 의사결정',
+                        '업계 전문성과 영향력',
+                        '일과 삶의 균형 추구'
+                    ],
+                    strengths: '전략적 통찰, 멘토링, 전문성, 독립성',
+                    weaknesses: '조직 정치 회피, 감정적 소통 개선 필요, 워라밸 관리',
+                    careers: '임원(CTO/CPO), 전략 컨설턴트, 교수/연구소장, 전문 컨설턴트'
+                },
+                INTP: {
+                    type: 'INTP',
+                    nickname: '논리술사',
+                    category: 'analyst',
+                    categoryName: '분석가형',
+                    description: '깊이 있는 전문 지식으로 업계를 선도하는 사상적 리더입니다.',
+                    traits: [
+                        '분야의 전문가로 인정받음',
+                        '혁신적인 아이디어와 연구',
+                        '후배 연구자 멘토링',
+                        '지속적인 학습과 탐구',
+                        '독립적이고 자율적인 업무'
+                    ],
+                    strengths: '전문성, 혁신, 분석력, 객관성',
+                    weaknesses: '실무 적용, 조직 관리, 네트워킹 부족',
+                    careers: '수석 연구원, 기술 자문, 교수, 전문 컨설턴트'
+                },
+                ENTJ: {
+                    type: 'ENTJ',
+                    nickname: '통솔자',
+                    category: 'analyst',
+                    categoryName: '분석가형',
+                    description: '조직을 변화시키고 성장시키는 카리스마 있는 임원급 리더입니다.',
+                    traits: [
+                        '조직 전체의 성과 책임',
+                        '리더십과 경영 전문성',
+                        '차세대 리더 육성',
+                        '과감한 변화와 혁신 주도',
+                        '비즈니스 네트워크 구축'
+                    ],
+                    strengths: '리더십, 전략 실행, 조직 관리, 영향력',
+                    weaknesses: '번아웃, 가정과의 균형, 권위적 성향',
+                    careers: 'CEO/COO, 사업부장, 이사회 멤버, 기업 컨설턴트'
+                },
+                ENTP: {
+                    type: 'ENTP',
+                    nickname: '변론가',
+                    category: 'analyst',
+                    categoryName: '분석가형',
+                    description: '풍부한 경험과 창의성으로 새로운 비즈니스를 개척하는 혁신가입니다.',
+                    traits: [
+                        '새로운 사업 기회 발굴',
+                        '다양한 산업 경험과 통찰',
+                        '후배 기업가 멘토링',
+                        '지속적인 도전과 혁신',
+                        '폭넓은 인맥과 네트워크'
+                    ],
+                    strengths: '혁신, 사업 감각, 네트워킹, 적응력',
+                    weaknesses: '지속성 부족, 루틴 관리, 집중력',
+                    careers: '시리얼 앤트러프러너, 사업 자문, 투자자, 혁신 컨설턴트'
+                },
+                INFJ: {
+                    type: 'INFJ',
+                    nickname: '옹호자',
+                    category: 'diplomat',
+                    categoryName: '외교관형',
+                    description: '조직의 가치와 사람을 중시하며 의미 있는 변화를 이끄는 리더입니다.',
+                    traits: [
+                        '조직 문화와 가치 정립',
+                        '인재 육성과 성장 지원',
+                        '사회적 책임과 윤리 중시',
+                        '장기적 비전과 지속가능성',
+                        '내면의 성숙과 지혜'
+                    ],
+                    strengths: '통찰력, 멘토링, 가치 리더십, 헌신',
+                    weaknesses: '자기 관리 부족, 이상과 현실의 괴리, 번아웃',
+                    careers: '조직문화 임원, 비영리 리더, 코치/상담가, 작가'
+                },
+                INFP: {
+                    type: 'INFP',
+                    nickname: '중재자',
+                    category: 'diplomat',
+                    categoryName: '외교관형',
+                    description: '자신만의 철학과 가치를 실현하며 의미 있는 영향력을 발휘하는 전문가입니다.',
+                    traits: [
+                        '가치 중심의 인생과 커리어',
+                        '창의적 작품과 프로젝트',
+                        '진정성 있는 관계와 영향력',
+                        '개인의 성장과 자아실현',
+                        '일과 삶의 조화 추구'
+                    ],
+                    strengths: '진정성, 창의성, 공감력, 가치 실현',
+                    weaknesses: '현실적 제약, 자기 홍보, 재정 관리',
+                    careers: '작가, 독립 컨설턴트, 크리에이터, 사회 활동가'
+                },
+                ENFJ: {
+                    type: 'ENFJ',
+                    nickname: '선도자',
+                    category: 'diplomat',
+                    categoryName: '외교관형',
+                    description: '사람들에게 영감을 주고 조직의 긍정적 변화를 이끄는 영향력 있는 리더입니다.',
+                    traits: [
+                        '조직과 사회에 긍정적 영향',
+                        '차세대 리더 육성과 코칭',
+                        '사람 중심의 리더십',
+                        '팀과 조직의 화합 주도',
+                        '커뮤니티와 네트워크 구축'
+                    ],
+                    strengths: '영향력, 멘토링, 소통 능력, 공감력',
+                    weaknesses: '자기 관리, 경계 설정, 비판 대응',
+                    careers: '임원(CHO/CDO), 교육 리더, 조직 개발 컨설턴트, 강연가'
+                },
+                ENFP: {
+                    type: 'ENFP',
+                    nickname: '활동가',
+                    category: 'diplomat',
+                    categoryName: '외교관형',
+                    description: '열정과 경험으로 새로운 가능성을 만들어가는 영감을 주는 리더입니다.',
+                    traits: [
+                        '다양한 경험과 폭넓은 시야',
+                        '창의적 프로젝트와 사업',
+                        '사람들에게 동기 부여',
+                        '지속적인 성장과 도전',
+                        '유연하고 적응력 높음'
+                    ],
+                    strengths: '열정, 창의성, 영감, 네트워킹',
+                    weaknesses: '집중력, 장기 전략, 재정 관리',
+                    careers: '크리에이티브 디렉터, 브랜드 컨설턴트, 강연가, 독립 기획자'
+                },
+                ISTJ: {
+                    type: 'ISTJ',
+                    nickname: '현실주의자',
+                    category: 'sentinel',
+                    categoryName: '관리자형',
+                    description: '풍부한 실무 경험으로 조직의 안정성과 신뢰를 책임지는 관리자입니다.',
+                    traits: [
+                        '조직의 핵심 프로세스 관리',
+                        '경험 기반의 안정적 의사결정',
+                        '후배 육성과 실무 교육',
+                        '일관되고 신뢰할 수 있는 성과',
+                        '전통과 원칙 중시'
+                    ],
+                    strengths: '신뢰성, 전문성, 체계성, 책임감',
+                    weaknesses: '변화 적응, 새로운 방식 수용, 유연성',
+                    careers: '재무/회계 임원, 감사, 준법 책임자, 운영 이사'
+                },
+                ISFJ: {
+                    type: 'ISFJ',
+                    nickname: '수호자',
+                    category: 'sentinel',
+                    categoryName: '관리자형',
+                    description: '오랜 헌신으로 조직과 사람들을 든든하게 지원하는 신뢰받는 전문가입니다.',
+                    traits: [
+                        '조직에 대한 깊은 헌신',
+                        '후배와 팀원 케어',
+                        '안정적이고 체계적인 업무',
+                        '조화로운 조직 문화 유지',
+                        '실용적이고 세심한 지원'
+                    ],
+                    strengths: '헌신, 배려심, 안정성, 세심함',
+                    weaknesses: '자기 주장, 변화 적응, 일과 삶의 균형',
+                    careers: '행정 책임자, 총무 이사, 의료 관리자, 고객 관리 책임자'
+                },
+                ESTJ: {
+                    type: 'ESTJ',
+                    nickname: '경영자',
+                    category: 'sentinel',
+                    categoryName: '관리자형',
+                    description: '풍부한 관리 경험으로 조직의 효율성과 성과를 책임지는 실행형 리더입니다.',
+                    traits: [
+                        '명확한 성과 관리와 실행',
+                        '효율적인 조직 운영',
+                        '결단력 있는 의사결정',
+                        '원칙과 규정 준수',
+                        '후배 관리자 육성'
+                    ],
+                    strengths: '관리 능력, 실행력, 결단력, 조직력',
+                    weaknesses: '융통성, 감정적 배려, 권위주의',
+                    careers: '운영 임원(COO), 공장장, 지점장, 프로그램 디렉터'
+                },
+                ESFJ: {
+                    type: 'ESFJ',
+                    nickname: '집정관',
+                    category: 'sentinel',
+                    categoryName: '관리자형',
+                    description: '사람 중심의 리더십으로 조직의 화합과 성과를 동시에 이끄는 리더입니다.',
+                    traits: [
+                        '팀과 조직의 화합 주도',
+                        '사람 중심의 관리와 리더십',
+                        '실용적이고 체계적인 운영',
+                        '고객과 직원 만족도 중시',
+                        '긍정적인 조직 문화 형성'
+                    ],
+                    strengths: '협력, 소통 능력, 실행력, 배려',
+                    weaknesses: '비판 대응, 변화 수용, 자기 관리',
+                    careers: '고객 서비스 임원, 지역 관리자, HR 이사, 커뮤니티 리더'
+                },
+                ISTP: {
+                    type: 'ISTP',
+                    nickname: '장인',
+                    category: 'explorer',
+                    categoryName: '탐험가형',
+                    description: '깊이 있는 기술 전문성으로 복잡한 문제를 해결하는 현장의 전문가입니다.',
+                    traits: [
+                        '고도의 기술적 전문성',
+                        '실전 경험 기반의 문제 해결',
+                        '후배 기술자 멘토링',
+                        '독립적이고 자율적인 업무',
+                        '위기 상황 대처 능력'
+                    ],
+                    strengths: '기술 전문성, 문제 해결, 실용성, 침착함',
+                    weaknesses: '조직 정치, 장기 계획, 감정 표현',
+                    careers: '수석 엔지니어, 기술 자문, 전문 기술자, 현장 책임자'
+                },
+                ISFP: {
+                    type: 'ISFP',
+                    nickname: '모험가',
+                    category: 'explorer',
+                    categoryName: '탐험가형',
+                    description: '자신만의 독특한 스타일로 창의적 가치를 만들어내는 장인입니다.',
+                    traits: [
+                        '독자적인 예술적 스타일 확립',
+                        '경험을 통한 감각과 통찰',
+                        '자유로운 작업 환경 추구',
+                        '진정성 있는 작품과 활동',
+                        '일과 삶의 균형 중시'
+                    ],
+                    strengths: '창의성, 전문성, 진정성, 유연성',
+                    weaknesses: '자기 홍보, 비즈니스 관리, 장기 계획',
+                    careers: '예술가, 크리에이티브 디렉터, 독립 디자이너, 공예 장인'
+                },
+                ESTP: {
+                    type: 'ESTP',
+                    nickname: '사업가',
+                    category: 'explorer',
+                    categoryName: '탐험가형',
+                    description: '풍부한 현장 경험과 순발력으로 기회를 포착하는 행동파 리더입니다.',
+                    traits: [
+                        '현장 중심의 실전 리더십',
+                        '빠른 의사결정과 실행력',
+                        '위기 관리와 문제 해결',
+                        '폭넓은 비즈니스 네트워크',
+                        '도전적인 프로젝트 선호'
+                    ],
+                    strengths: '실행력, 협상력, 현실 감각, 순발력',
+                    weaknesses: '장기 전략, 세부 관리, 감정 표현',
+                    careers: '영업 임원, 사업 개발 이사, 프랜차이즈 운영자, 현장 책임자'
+                },
+                ESFP: {
+                    type: 'ESFP',
+                    nickname: '연예인',
+                    category: 'explorer',
+                    categoryName: '탐험가형',
+                    description: '긍정적인 에너지와 경험으로 사람들에게 즐거움과 영감을 주는 리더입니다.',
+                    traits: [
+                        '사람들에게 긍정적 영향',
+                        '현장 경험과 실전 감각',
+                        '활발한 네트워킹과 관계',
+                        '즉각적인 대응과 실행',
+                        '유연하고 적응력 높음'
+                    ],
+                    strengths: '사교성, 실행력, 긍정성, 영향력',
+                    weaknesses: '장기 계획, 체계적 관리, 비판 대응',
+                    careers: '이벤트 사업가, 홍보 이사, 고객 경험 책임자, 엔터테인먼트 프로듀서'
+                }
             }
         };
 
         // 전역 변수
-        let currentFilter = 'all';
         const modal = document.getElementById('mbtiModal');
         const closeBtn = document.querySelector('.close');
 
@@ -598,13 +1186,21 @@
         document.addEventListener('DOMContentLoaded', function() {
             renderMBTICards();
             setupFilterButtons();
+            setupAgeButtons();
             setupModal();
         });
+
+        // 현재 선택된 데이터 가져오기
+        function getCurrentMBTIData() {
+            return mbtiDataByAge[currentAge];
+        }
 
         // MBTI 카드 렌더링
         function renderMBTICards(filter = 'all') {
             const grid = document.getElementById('mbtiGrid');
             grid.innerHTML = '';
+
+            const mbtiData = getCurrentMBTIData();
 
             Object.values(mbtiData).forEach(mbti => {
                 if (filter === 'all' || mbti.category === filter) {
@@ -634,6 +1230,20 @@
             `;
 
             return card;
+        }
+
+        // 연령대 버튼 설정
+        function setupAgeButtons() {
+            const ageButtons = document.querySelectorAll('.age-btn');
+            ageButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    ageButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+
+                    currentAge = this.getAttribute('data-age');
+                    renderMBTICards(currentFilter);
+                });
+            });
         }
 
         // 필터 버튼 설정
