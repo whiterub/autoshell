@@ -103,6 +103,29 @@
             box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
         }
 
+        .perspective-btn {
+            padding: 10px 20px;
+            border: 2px solid #4caf50;
+            background: white;
+            color: #4caf50;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .perspective-btn:hover {
+            background: #4caf50;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .perspective-btn.active {
+            background: #4caf50;
+            color: white;
+        }
+
         .mbti-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -323,6 +346,11 @@
                 <button class="age-btn" data-age="thirties">💼 30대용</button>
                 <button class="age-btn" data-age="forties">👔 40대용</button>
             </div>
+            <div class="filter-buttons" style="margin-bottom: 20px;">
+                <button class="perspective-btn active" data-perspective="basic">📋 기본 성향</button>
+                <button class="perspective-btn" data-perspective="financial">💰 재테크</button>
+                <button class="perspective-btn" data-perspective="workplace" id="workplaceBtn" style="display:none;">👥 직장 관계</button>
+            </div>
             <div class="filter-buttons">
                 <button class="filter-btn active" data-filter="all">전체보기</button>
                 <button class="filter-btn" data-filter="analyst">분석가형 (NT)</button>
@@ -351,6 +379,7 @@
         // 현재 선택된 연령대와 필터
         let currentAge = 'elementary';
         let currentFilter = 'all';
+        let currentPerspective = 'basic';
 
         // 연령대별 MBTI 데이터
         const mbtiDataByAge = {
@@ -1226,6 +1255,206 @@
             }
         };
 
+        // 직장 관계 데이터 (30대/40대용)
+        const workplaceRelationships = {
+            thirties: {
+                INTJ: {
+                    asBoss: '전략적 방향을 제시하고 팀의 장기 목표를 설정합니다. 논리적 근거를 바탕으로 결정하며, 팀원의 자율성을 존중합니다. 성과 기준이 높고, 비효율을 참지 못합니다.',
+                    asColleague: '독립적으로 일하는 것을 선호하지만, 필요시 전문적인 협업을 합니다. 감정보다 논리로 소통하며, 직설적인 피드백을 줍니다.',
+                    asSubordinate: '명확한 목표와 자율성을 원합니다. 미세관리를 싫어하며, 상사의 결정에 논리적 근거를 요구합니다. 전문성을 인정받으면 최선을 다합니다.',
+                    asCEO: '비전과 전략을 명확히 수립하고 실행합니다. 데이터 기반 의사결정을 하며, 조직의 효율성을 극대화합니다. 장기적 성장에 집중합니다.'
+                },
+                INTP: {
+                    asBoss: '혁신적인 아이디어를 장려하고 지적 자극을 제공합니다. 논리적 토론을 즐기며, 창의성을 중시합니다. 루틴한 관리는 소홀할 수 있습니다.',
+                    asColleague: '복잡한 문제 해결에 뛰어나며, 새로운 관점을 제시합니다. 감정적 상황보다 논리적 분석을 선호합니다.',
+                    asSubordinate: '지적 자극과 학습 기회를 중시합니다. 반복 업무를 싫어하며, 창의적 자유를 원합니다. 논리적 설명 없는 지시는 거부감을 느낍니다.',
+                    asCEO: '혁신과 기술 발전을 주도합니다. 전략적 사고로 업계를 선도하지만, 실행 관리는 부족할 수 있습니다.'
+                },
+                ENTJ: {
+                    asBoss: '명확한 목표를 설정하고 팀을 강하게 이끕니다. 빠른 의사결정과 높은 성과를 요구합니다. 효율성을 최우선으로 하며, 무능력을 용납하지 않습니다.',
+                    asColleague: '프로젝트를 주도하고 리더십을 발휘합니다. 직설적이고 단도직입적으로 소통합니다. 경쟁적이며 성과 지향적입니다.',
+                    asSubordinate: '도전적인 과제와 명확한 목표를 원합니다. 능력을 인정하는 상사를 존경하며, 무능한 리더십은 참지 못합니다.',
+                    asCEO: '비전을 제시하고 조직을 변화시킵니다. 과감한 결정으로 성과를 만들어냅니다. 경쟁에서 승리하는 것을 중시합니다.'
+                },
+                ENTP: {
+                    asBoss: '창의적 사고를 독려하고 새로운 시도를 장려합니다. 토론과 브레인스토밍을 즐기며, 유연한 업무 방식을 허용합니다.',
+                    asColleague: '아이디어가 풍부하고 문제 해결에 창의적입니다. 논쟁을 즐기며, 기존 방식에 도전합니다.',
+                    asSubordinate: '자유로운 업무 환경과 혁신 기회를 원합니다. 틀에 박힌 업무를 싫어하며, 새로운 프로젝트에 흥미를 느낍니다.',
+                    asCEO: '혁신과 변화를 주도합니다. 새로운 비즈니스 모델을 창출하지만, 실행보다 아이디어에 강합니다.'
+                },
+                INFJ: {
+                    asBoss: '팀원의 성장과 발전을 지원합니다. 비전을 제시하고 의미 있는 목표를 설정합니다. 개인별 맞춤 피드백을 제공하며, 조화로운 팀 분위기를 만듭니다.',
+                    asColleague: '진정성 있게 협력하며, 갈등 상황을 중재합니다. 깊이 있는 대화를 선호하고, 팀의 화합에 기여합니다.',
+                    asSubordinate: '의미 있는 일과 가치 지향적 리더십을 원합니다. 인정받고 존중받을 때 헌신적으로 일합니다.',
+                    asCEO: '조직의 비전과 가치를 명확히 하고, 사람 중심 문화를 만듭니다. ESG 경영과 지속가능성을 중시합니다.'
+                },
+                INFP: {
+                    asBoss: '팀원의 개성과 가치를 존중합니다. 자율성을 부여하고 창의성을 격려합니다. 갈등을 피하려는 경향이 있습니다.',
+                    asColleague: '진정성 있게 협력하며, 창의적 아이디어를 제공합니다. 비판에 민감하고, 조화로운 관계를 선호합니다.',
+                    asSubordinate: '가치 중심의 업무와 의미 있는 프로젝트를 원합니다. 자율성과 창의적 자유를 중시합니다.',
+                    asCEO: '조직의 가치와 사명을 강조합니다. 윤리적 경영을 추구하지만, 어려운 결정을 내리는 데 고민이 많습니다.'
+                },
+                ENFJ: {
+                    asBoss: '팀을 하나로 모으고 동기부여합니다. 개인의 강점을 파악하고 성장을 지원합니다. 소통을 중시하며 긍정적 분위기를 조성합니다.',
+                    asColleague: '협력적이고 사교적입니다. 팀 프로젝트를 잘 조율하며, 갈등을 해결합니다. 타인의 의견을 경청합니다.',
+                    asSubordinate: '인정과 칭찬을 중시합니다. 팀워크를 중요하게 생각하며, 리더의 비전에 헌신적으로 따릅니다.',
+                    asCEO: '사람 중심의 조직 문화를 만듭니다. 팀원의 성장과 행복을 중시하며, 강한 조직 충성도를 이끌어냅니다.'
+                },
+                ENFP: {
+                    asBoss: '창의성과 혁신을 장려합니다. 자유로운 분위기를 만들고 팀원에게 영감을 줍니다. 열정적이지만 디테일 관리는 약할 수 있습니다.',
+                    asColleague: '에너지 넘치고 긍정적입니다. 새로운 아이디어를 제안하며, 브레인스토밍을 즐깁니다. 루틴 업무는 지루해합니다.',
+                    asSubordinate: '새로운 프로젝트와 변화를 원합니다. 자율성과 창의적 자유를 중시하며, 반복 업무를 싫어합니다.',
+                    asCEO: '혁신과 변화를 주도합니다. 팀에 영감을 주지만, 장기 실행 계획은 부족할 수 있습니다.'
+                },
+                ISTJ: {
+                    asBoss: '명확한 기준과 프로세스를 수립합니다. 체계적으로 관리하며, 규칙 준수를 강조합니다. 공정하고 일관된 리더십을 발휘합니다.',
+                    asColleague: '신뢰할 수 있고 책임감 있습니다. 맡은 일을 정확히 처리하며, 체계적으로 협력합니다.',
+                    asSubordinate: '명확한 지시와 구조화된 환경을 선호합니다. 규칙을 따르며, 주어진 업무를 확실히 완수합니다.',
+                    asCEO: '안정적이고 체계적인 경영을 합니다. 리스크를 최소화하고 프로세스를 중시하며, 일관된 성과를 냅니다.'
+                },
+                ISFJ: {
+                    asBoss: '팀원을 세심하게 챙기고 지원합니다. 안정적인 환경을 만들며, 조화로운 팀 분위기를 조성합니다.',
+                    asColleague: '헌신적이고 협력적입니다. 실용적인 도움을 제공하며, 팀의 화합에 기여합니다.',
+                    asSubordinate: '안정적인 환경과 명확한 기대를 원합니다. 헌신적으로 일하지만, 자기 주장은 약합니다.',
+                    asCEO: '안정성과 전통을 중시합니다. 직원을 돌보고 조화로운 조직 문화를 만들지만, 변화에는 보수적입니다.'
+                },
+                ESTJ: {
+                    asBoss: '효율적으로 조직을 관리합니다. 명확한 목표와 기한을 설정하며, 성과를 엄격히 관리합니다. 규칙과 절차를 강조합니다.',
+                    asColleague: '실행력이 뛰어나고 책임감 있습니다. 직설적으로 소통하며, 비효율을 참지 못합니다.',
+                    asSubordinate: '명확한 지시와 구조를 선호합니다. 책임감 있게 일하며, 상사의 권위를 존중합니다.',
+                    asCEO: '실행력 있는 경영을 합니다. 목표를 확실히 달성하며, 효율성과 성과를 최우선으로 합니다.'
+                },
+                ESFJ: {
+                    asBoss: '팀의 화합과 협력을 중시합니다. 팀원을 배려하고 지원하며, 긍정적 분위기를 만듭니다. 소통을 중요하게 생각합니다.',
+                    asColleague: '협력적이고 친근합니다. 팀워크를 중시하며, 동료들과 좋은 관계를 유지합니다.',
+                    asSubordinate: '인정과 감사를 중시합니다. 팀에 헌신적이며, 조화로운 관계를 원합니다.',
+                    asCEO: '사람 중심의 경영을 합니다. 직원 만족도를 중시하며, 가족 같은 조직 문화를 만듭니다.'
+                },
+                ISTP: {
+                    asBoss: '실용적이고 효율적으로 관리합니다. 팀원에게 자율성을 주며, 문제 해결 중심으로 접근합니다. 불필요한 회의를 싫어합니다.',
+                    asColleague: '독립적으로 일하며, 기술적 문제 해결에 뛰어납니다. 과묵하지만 필요시 협력합니다.',
+                    asSubordinate: '자율성과 유연성을 원합니다. 실용적인 업무를 선호하며, 미세관리를 싫어합니다.',
+                    asCEO: '실용적이고 효율적인 경영을 합니다. 위기 관리 능력이 뛰어나지만, 장기 전략은 부족할 수 있습니다.'
+                },
+                ISFP: {
+                    asBoss: '유연하고 자율적인 환경을 만듭니다. 팀원의 개성을 존중하며, 창의성을 격려합니다. 갈등을 피하려는 경향이 있습니다.',
+                    asColleague: '협력적이고 조용합니다. 창의적 기여를 하지만, 자기 홍보는 약합니다.',
+                    asSubordinate: '자유로운 업무 환경과 창의적 자율성을 원합니다. 강압적 리더십을 싫어합니다.',
+                    asCEO: '창의성과 개성을 중시하는 문화를 만듭니다. 유연한 경영을 하지만, 체계적 관리는 약할 수 있습니다.'
+                },
+                ESTP: {
+                    asBoss: '빠른 결정과 실행을 중시합니다. 위기 상황에 강하며, 실용적 해결책을 제시합니다. 역동적 분위기를 만듭니다.',
+                    asColleague: '행동력이 뛰어나고 사교적입니다. 즉각적 문제 해결에 강하지만, 계획은 부족할 수 있습니다.',
+                    asSubordinate: '행동의 자유와 도전적 과제를 원합니다. 루틴을 싫어하며, 즉각적 피드백을 선호합니다.',
+                    asCEO: '과감한 결단과 빠른 실행을 합니다. 위기를 기회로 만들지만, 장기 전략은 부족할 수 있습니다.'
+                },
+                ESFP: {
+                    asBoss: '밝고 긍정적인 분위기를 만듭니다. 팀원을 격려하고 즐거운 환경을 조성합니다. 즉흥적이고 유연합니다.',
+                    asColleague: '사교적이고 협력적입니다. 팀 분위기를 밝게 만들며, 현장 대응이 빠릅니다.',
+                    asSubordinate: '즐거운 업무 환경과 인정을 원합니다. 즉각적 피드백을 선호하며, 반복 업무를 지루해합니다.',
+                    asCEO: '사람 중심의 긍정적 문화를 만듭니다. 즉각적 대응이 빠르지만, 장기 계획은 부족할 수 있습니다.'
+                }
+            },
+            forties: {
+                INTJ: {
+                    asBoss: '경험과 통찰로 전략적 방향을 제시합니다. 후배 리더를 육성하며, 조직의 장기 비전을 수립합니다. 높은 전문성으로 존경받습니다.',
+                    asColleague: '깊이 있는 전문성으로 자문 역할을 합니다. 멘토로서 후배를 지도하며, 독립적으로 고난도 프로젝트를 수행합니다.',
+                    asSubordinate: '전문가로서의 자율성을 요구합니다. 능력 있는 리더십을 존중하지만, 전문 영역에서는 독립성을 유지합니다.',
+                    asCEO: '장기 비전과 전략으로 조직을 이끕니다. 후계자를 육성하며, 지속가능한 성장을 추구합니다. 업계 리더로 인정받습니다.'
+                },
+                INTP: {
+                    asBoss: '깊은 전문성과 통찰력으로 팀을 이끕니다. 혁신적 사고를 장려하며, 후배에게 지적 자극을 제공합니다. 전문 분야의 권위자로 인정받습니다.',
+                    asColleague: '고급 전문가로서 복잡한 문제를 해결합니다. 자문 역할을 하며, 새로운 관점을 제시합니다.',
+                    asSubordinate: '전문가적 자율성과 지적 도전을 원합니다. 논리적이고 능력 있는 리더십을 존중합니다.',
+                    asCEO: '혁신과 R&D를 주도합니다. 전략적 사고로 미래를 준비하지만, 실행은 신뢰할 수 있는 팀에 위임합니다.'
+                },
+                ENTJ: {
+                    asBoss: '풍부한 경험으로 조직을 이끕니다. 차세대 리더를 키우며, 과감한 변화와 혁신을 주도합니다. 강한 카리스마와 실행력을 발휘합니다.',
+                    asColleague: '임원급으로서 전략적 파트너십을 구축합니다. 의사결정에 영향력을 행사하며, 조직 전체의 성과에 기여합니다.',
+                    asSubordinate: '고위 전문가로서 자율적으로 일합니다. 조직의 비전에 동의하면 헌신적이지만, 비효율적 리더십은 도전합니다.',
+                    asCEO: '강력한 리더십으로 조직을 성장시킵니다. 대담한 변화를 주도하며, 업계에서 경쟁 우위를 확보합니다.'
+                },
+                ENTP: {
+                    asBoss: '경험과 창의성으로 혁신을 이끕니다. 전략적 사고와 유연성을 겸비하며, 조직을 새로운 방향으로 이끕니다.',
+                    asColleague: '시니어 전문가로서 전략적 통찰을 제공합니다. 혁신 프로젝트를 주도하며, 조직 변화를 촉진합니다.',
+                    asSubordinate: '높은 자율성과 도전적 과제를 원합니다. 혁신적인 리더십에 헌신하며, 창의적 기여를 합니다.',
+                    asCEO: '혁신과 변화를 주도하며 새로운 비즈니스 모델을 창출합니다. 경험을 바탕으로 실행력도 갖추게 됩니다.'
+                },
+                INFJ: {
+                    asBoss: '경험과 지혜로 팀을 이끕니다. 조직 문화와 가치를 정립하며, 후배 리더를 멘토링합니다. 사람 중심의 리더십을 발휘합니다.',
+                    asColleague: '깊은 통찰력으로 조언을 제공합니다. 조직의 방향성에 기여하며, 화합과 협력을 이끌어냅니다.',
+                    asSubordinate: '의미 있는 일과 가치 실현을 중시합니다. 존중받는 환경에서 헌신적으로 일하며, 조직의 비전에 기여합니다.',
+                    asCEO: '가치와 사람 중심의 경영을 합니다. 지속가능경영과 사회적 책임을 실천하며, 조직의 유산을 남깁니다.'
+                },
+                INFP: {
+                    asBoss: '경험을 통해 균형잡힌 리더십을 발휘합니다. 가치와 실용성을 조화시키며, 팀원의 성장을 지원합니다.',
+                    asColleague: '진정성과 깊은 통찰로 조직에 기여합니다. 창의적 프로젝트에서 중요한 역할을 하며, 멘토 역할도 수행합니다.',
+                    asSubordinate: '의미 있는 일과 가치 실현을 추구합니다. 자율성을 유지하면서도 조직 목표에 헌신합니다.',
+                    asCEO: '가치 중심의 윤리적 경영을 실천합니다. 조직의 사명을 명확히 하며, 지속가능한 문화를 만듭니다.'
+                },
+                ENFJ: {
+                    asBoss: '풍부한 경험으로 사람 중심 리더십을 발휘합니다. 조직 문화를 정립하고, 후배 리더를 육성합니다.',
+                    asColleague: '시니어 리더로서 조직의 화합을 이끕니다. 전략적 소통 능력으로 협력을 촉진하며, 멘토 역할을 합니다.',
+                    asSubordinate: '존중과 인정 속에서 헌신적으로 일합니다. 조직의 비전에 깊이 공감하며, 팀 성공에 기여합니다.',
+                    asCEO: '사람과 성과를 동시에 중시하는 경영을 합니다. 강한 조직 문화를 만들며, 리더를 육성합니다.'
+                },
+                ENFP: {
+                    asBoss: '경험을 바탕으로 창의적 리더십을 발휘합니다. 팀에 영감을 주며, 혁신을 격려합니다. 멘토로서 후배의 성장을 지원합니다.',
+                    asColleague: '다양한 경험으로 조직에 기여합니다. 긍정적 영향력을 발휘하며, 변화와 혁신을 촉진합니다.',
+                    asSubordinate: '자율성과 창의적 자유를 유지하면서도, 조직의 목표에 기여합니다. 의미 있는 프로젝트에 열정을 쏟습니다.',
+                    asCEO: '혁신과 사람 중심의 문화를 만듭니다. 조직에 영감을 주며, 창의적인 방향으로 이끕니다.'
+                },
+                ISTJ: {
+                    asBoss: '경험과 전문성으로 안정적인 리더십을 발휘합니다. 체계적인 시스템을 구축하며, 후배에게 노하우를 전수합니다.',
+                    asColleague: '신뢰받는 전문가로서 조직의 안정성을 책임집니다. 멘토로서 체계적인 업무 방식을 전수합니다.',
+                    asSubordinate: '전문가로서 자율적으로 일하며, 맡은 영역에서 최고 수준을 유지합니다. 명확한 역할과 책임을 선호합니다.',
+                    asCEO: '안정적이고 지속가능한 경영을 합니다. 탄탄한 시스템을 구축하며, 리스크 관리에 뛰어납니다.'
+                },
+                ISFJ: {
+                    asBoss: '경험과 헌신으로 팀을 이끕니다. 안정적이고 지원적인 환경을 만들며, 조직의 전통과 문화를 이어갑니다.',
+                    asColleague: '신뢰받는 동료로서 조직의 안정성에 기여합니다. 후배를 세심하게 돌보며, 실용적 조언을 제공합니다.',
+                    asSubordinate: '헌신적으로 일하며 조직에 충성합니다. 안정적인 환경에서 최선을 다하며, 후배를 돕습니다.',
+                    asCEO: '안정성과 직원 복지를 중시하는 경영을 합니다. 가족 같은 조직 문화를 만들며, 전통을 이어갑니다.'
+                },
+                ESTJ: {
+                    asBoss: '풍부한 경험으로 효율적인 조직을 운영합니다. 체계적 시스템을 구축하며, 차세대 리더를 육성합니다.',
+                    asColleague: '고위 관리자로서 조직의 실행력을 책임집니다. 명확한 의사결정으로 방향을 제시하며, 성과를 관리합니다.',
+                    asSubordinate: '전문가로서 책임감 있게 일합니다. 명확한 목표와 권한 위임을 선호하며, 맡은 영역에서 탁월함을 추구합니다.',
+                    asCEO: '강력한 실행력으로 조직을 이끕니다. 효율성과 성과를 극대화하며, 체계적인 경영 시스템을 구축합니다.'
+                },
+                ESFJ: {
+                    asBoss: '경험과 배려로 팀을 이끕니다. 조화로운 조직 문화를 만들며, 후배를 육성하고 지원합니다.',
+                    asColleague: '시니어로서 팀의 화합을 이끕니다. 조직 내 관계를 조율하며, 후배에게 실용적 조언을 제공합니다.',
+                    asSubordinate: '헌신적이고 협력적으로 일합니다. 팀과 조직에 충성하며, 조화로운 관계 속에서 성과를 냅니다.',
+                    asCEO: '사람 중심의 가족적 경영을 합니다. 직원 만족도와 조직 문화를 중시하며, 안정적인 성장을 추구합니다.'
+                },
+                ISTP: {
+                    asBoss: '경험과 전문성으로 실용적 리더십을 발휘합니다. 효율적 문제 해결을 중시하며, 후배에게 기술을 전수합니다.',
+                    asColleague: '기술 전문가로서 고난도 문제를 해결합니다. 위기 관리에 뛰어나며, 실용적 조언을 제공합니다.',
+                    asSubordinate: '전문가로서 높은 자율성을 유지합니다. 기술적 전문성을 발휘하며, 실용적인 솔루션을 제공합니다.',
+                    asCEO: '실용적이고 효율적인 경영을 합니다. 위기 관리 능력이 탁월하며, 경험을 통해 전략적 사고도 갖춥니다.'
+                },
+                ISFP: {
+                    asBoss: '경험을 통해 균형잡힌 리더십을 발휘합니다. 창의성과 실용성을 조화시키며, 팀원의 개성을 존중합니다.',
+                    asColleague: '창의적 전문가로서 독특한 관점을 제공합니다. 조용하지만 깊이 있는 기여를 하며, 후배를 지원합니다.',
+                    asSubordinate: '자율적으로 일하며 창의적 기여를 합니다. 존중받는 환경에서 전문성을 발휘합니다.',
+                    asCEO: '창의성과 인간 중심의 경영을 합니다. 유연하면서도 경험을 바탕으로 안정적인 운영을 합니다.'
+                },
+                ESTP: {
+                    asBoss: '경험과 순발력으로 역동적 리더십을 발휘합니다. 빠른 의사결정과 위기 관리에 뛰어나며, 실용적 솔루션을 제시합니다.',
+                    asColleague: '시니어 전문가로서 즉각적 문제 해결을 합니다. 위기 상황에서 리더십을 발휘하며, 실전 경험을 공유합니다.',
+                    asSubordinate: '도전적 과제를 선호하며 빠른 실행력을 발휘합니다. 자율성을 유지하면서도 성과를 냅니다.',
+                    asCEO: '과감하고 빠른 경영을 합니다. 위기를 기회로 만들며, 경험을 통해 전략적 안목도 갖춥니다.'
+                },
+                ESFP: {
+                    asBoss: '경험과 긍정성으로 활기찬 조직을 만듭니다. 팀원을 격려하고 지원하며, 현장 경험을 바탕으로 실용적 리더십을 발휘합니다.',
+                    asColleague: '밝고 협력적인 시니어로서 조직 분위기를 좋게 만듭니다. 현장 감각이 뛰어나며, 후배를 격려합니다.',
+                    asSubordinate: '긍정적으로 일하며 팀에 기여합니다. 즐거운 환경을 선호하지만, 경험을 통해 책임감도 높습니다.',
+                    asCEO: '사람 중심의 활기찬 문화를 만듭니다. 현장 감각과 빠른 대응력으로 조직을 이끕니다.'
+                }
+            }
+        };
+
         // 전역 변수
         const modal = document.getElementById('mbtiModal');
         const closeBtn = document.querySelector('.close');
@@ -1235,7 +1464,9 @@
             renderMBTICards();
             setupFilterButtons();
             setupAgeButtons();
+            setupPerspectiveButtons();
             setupModal();
+            updateWorkplaceButtonVisibility();
         });
 
         // 현재 선택된 데이터 가져오기
@@ -1289,9 +1520,39 @@
                     this.classList.add('active');
 
                     currentAge = this.getAttribute('data-age');
+                    updateWorkplaceButtonVisibility();
                     renderMBTICards(currentFilter);
                 });
             });
+        }
+
+        // 관점 버튼 설정
+        function setupPerspectiveButtons() {
+            const perspectiveButtons = document.querySelectorAll('.perspective-btn');
+            perspectiveButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    perspectiveButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+
+                    currentPerspective = this.getAttribute('data-perspective');
+                });
+            });
+        }
+
+        // 직장 관계 버튼 표시/숨김
+        function updateWorkplaceButtonVisibility() {
+            const workplaceBtn = document.getElementById('workplaceBtn');
+            if (currentAge === 'elementary') {
+                workplaceBtn.style.display = 'none';
+                // 초등학생용에서는 기본 성향으로 전환
+                if (currentPerspective === 'workplace') {
+                    currentPerspective = 'basic';
+                    document.querySelector('.perspective-btn[data-perspective="basic"]').classList.add('active');
+                    document.querySelector('.perspective-btn[data-perspective="workplace"]').classList.remove('active');
+                }
+            } else {
+                workplaceBtn.style.display = 'inline-block';
+            }
         }
 
         // 필터 버튼 설정
@@ -1325,49 +1586,89 @@
         // 모달 열기
         function openModal(mbti) {
             const modalBody = document.getElementById('modalBody');
-
-            modalBody.innerHTML = `
+            let contentHTML = `
                 <div class="modal-header">
                     <div class="modal-type">${mbti.type}</div>
                     <div class="modal-nickname">${mbti.nickname}</div>
                     <div class="mbti-category ${mbti.category}-tag">${mbti.categoryName}</div>
                 </div>
-
-                <div class="modal-section">
-                    <div class="modal-section-title">성격 설명</div>
-                    <div class="modal-section-content">${mbti.description}</div>
-                </div>
-
-                <div class="modal-section">
-                    <div class="modal-section-title">주요 특징</div>
-                    <div class="modal-section-content">
-                        <ul class="trait-list">
-                            ${mbti.traits.map(trait => `<li>${trait}</li>`).join('')}
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="modal-section">
-                    <div class="modal-section-title">강점</div>
-                    <div class="modal-section-content">${mbti.strengths}</div>
-                </div>
-
-                <div class="modal-section">
-                    <div class="modal-section-title">약점</div>
-                    <div class="modal-section-content">${mbti.weaknesses}</div>
-                </div>
-
-                <div class="modal-section">
-                    <div class="modal-section-title">추천 직업</div>
-                    <div class="modal-section-content">${mbti.careers}</div>
-                </div>
-
-                <div class="modal-section">
-                    <div class="modal-section-title">💰 재테크 성향</div>
-                    <div class="modal-section-content">${mbti.financial}</div>
-                </div>
             `;
 
+            if (currentPerspective === 'basic') {
+                // 기본 성향 표시
+                contentHTML += `
+                    <div class="modal-section">
+                        <div class="modal-section-title">성격 설명</div>
+                        <div class="modal-section-content">${mbti.description}</div>
+                    </div>
+
+                    <div class="modal-section">
+                        <div class="modal-section-title">주요 특징</div>
+                        <div class="modal-section-content">
+                            <ul class="trait-list">
+                                ${mbti.traits.map(trait => `<li>${trait}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="modal-section">
+                        <div class="modal-section-title">강점</div>
+                        <div class="modal-section-content">${mbti.strengths}</div>
+                    </div>
+
+                    <div class="modal-section">
+                        <div class="modal-section-title">약점</div>
+                        <div class="modal-section-content">${mbti.weaknesses}</div>
+                    </div>
+
+                    <div class="modal-section">
+                        <div class="modal-section-title">추천 직업</div>
+                        <div class="modal-section-content">${mbti.careers}</div>
+                    </div>
+                `;
+            } else if (currentPerspective === 'financial') {
+                // 재테크 성향 표시
+                contentHTML += `
+                    <div class="modal-section">
+                        <div class="modal-section-title">💰 재테크 성향</div>
+                        <div class="modal-section-content">${mbti.financial}</div>
+                    </div>
+                `;
+            } else if (currentPerspective === 'workplace') {
+                // 직장 관계 표시
+                const workplaceData = workplaceRelationships[currentAge]?.[mbti.type];
+                if (workplaceData) {
+                    contentHTML += `
+                        <div class="modal-section">
+                            <div class="modal-section-title">👔 상사로서</div>
+                            <div class="modal-section-content">${workplaceData.asBoss}</div>
+                        </div>
+
+                        <div class="modal-section">
+                            <div class="modal-section-title">🤝 동료로서</div>
+                            <div class="modal-section-content">${workplaceData.asColleague}</div>
+                        </div>
+
+                        <div class="modal-section">
+                            <div class="modal-section-title">📋 부하로서</div>
+                            <div class="modal-section-content">${workplaceData.asSubordinate}</div>
+                        </div>
+
+                        <div class="modal-section">
+                            <div class="modal-section-title">🏢 대표로서</div>
+                            <div class="modal-section-content">${workplaceData.asCEO}</div>
+                        </div>
+                    `;
+                } else {
+                    contentHTML += `
+                        <div class="modal-section">
+                            <div class="modal-section-content">직장 관계 데이터가 준비 중입니다.</div>
+                        </div>
+                    `;
+                }
+            }
+
+            modalBody.innerHTML = contentHTML;
             modal.style.display = 'block';
         }
     </script>
